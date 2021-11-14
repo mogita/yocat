@@ -1,0 +1,18 @@
+{
+  "name": "yocat-mast",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "mogita <me@mogita.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "node app.js"
+  },
+  "dependencies": {
+    "fs-extra": "^10.0.0",
+    "megalodon": "^3.6.7",
+    "mongoose": "^6.0.12"
+  },
+  "devDependencies": {
+    "prettier": "^2.4.1"
+  }
+}
