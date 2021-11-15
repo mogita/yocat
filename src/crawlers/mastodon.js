@@ -1,4 +1,5 @@
 const mega = require('megalodon')
+const Tasks = require('./../models/tasks')
 
 module.exports = class Mastodon {
   constructor(baseUrl, accessToken) {
@@ -24,7 +25,7 @@ module.exports = class Mastodon {
     this.streamer.on('error', this.onError.bind(this))
 
     this.streamer.on('connection-limit-exceeded', (err) => {
-      console.warn('streamer', this.baseUrl, 'has exceeded the connection limit and is going to stop')
+      console.warn(`[${this.baseUrl}] instance has exceeded the connection limit and is going to stop`)
       this.stopStreamer()
     })
   }
@@ -36,10 +37,61 @@ module.exports = class Mastodon {
   }
 
   onStatus(status) {
-    console.log(this.baseUrl, status.id, status.content)
+    if (this.shouldKeepStatus(status) === false) {
+      // console.log(`[${this.baseUrl}] ignored status ${status.url}`)
+      return
+    }
+
+    try {
+      this.enqueue(status)
+      console.log(`[${this.baseUrl}] 📥 enqueued status ${status.url}`)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   onError(err) {
-    console.error(this.baseUrl, err)
+    console.error(`[${this.baseUrl}] ${err}`)
+  }
+
+  shouldKeepStatus(status) {
+    // Ignore boosted toot
+    if (status.reblogged === true) {
+      return false
+    }
+
+    // Ignore toot without media
+    if (!Array.isArray(status.media_attachments) || status.media_attachments.length === 0) {
+      return false
+    }
+
+    // Ignore toot without an image
+    const images = status.media_attachments.filter((media) => media.type === 'image')
+    if (images.length === 0) {
+      return false
+    }
+
+    return true
+  }
+
+  async enqueue(status) {
+    const { id } = status
+
+    // Extract images
+    const images = status.media_attachments.filter((media) => media.type === 'image')
+    const remoteImages = images.map((o) => o.url)
+
+    const task = new Tasks({
+      uniqueId: `${this.baseUrl}_${id}`,
+      postId: id,
+      originalPost: status,
+      mediaRemotePaths: remoteImages,
+    })
+
+    try {
+      await task.save()
+    } catch (err) {
+      throw err
+    }
   }
 }
