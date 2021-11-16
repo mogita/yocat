@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 mongoose.Promise = global.Promise
 const Schema = mongoose.Schema
-const { states } = require('./../fsm')
+const  states  = require('./../states')
 
 const Tasks = new Schema(
   {
@@ -11,12 +11,12 @@ const Tasks = new Schema(
     postId: { type: String, required: true },
     // the post payload
     originalPost: { type: Schema.Types.Mixed, required: true },
-    challengeRes: { type: Schema.Types.Mixed, require: false },
     state: {
       type: String,
       enum: Object.values(states),
       default: states.TODO,
     },
+    challengeRes: { type: [{ type: Schema.Types.Mixed, require: false }] },
     mediaRemotePaths: [String],
     mediaLocalPaths: [String],
     downloadTry: { type: Number, required: true, default: 0 },
@@ -50,38 +50,38 @@ Tasks.statics.deleteById = function (id) {
 
 Tasks.statics.addLogById = function (id, state, log = '') {
   return this.model('Tasks')
-    .update({ _id: id }, { $push: { logs: { state, log } } })
+    .updateOne({ _id: id }, { $push: { logs: { state, log } } })
     .exec()
 }
 
 Tasks.statics.updateTaskState = function (id, newState) {
-  return this.model('Tasks').update({ _id: id }, { state: newState }).exec()
+  return this.model('Tasks').updateOne({ _id: id }, { state: newState }).exec()
 }
 
 Tasks.statics.addDownloadTryById = function (id) {
   return this.model('Tasks')
-    .update({ _id: id }, { $inc: { downloadTry: 1 } })
+    .updateOne({ _id: id }, { $inc: { downloadTry: 1 } })
     .exec()
 }
 
 Tasks.statics.addRecognizeTryById = function (id) {
   return this.model('Tasks')
-    .update({ _id: id }, { $inc: { recognizeTry: 1 } })
+    .updateOne({ _id: id }, { $inc: { recognizeTry: 1 } })
     .exec()
 }
 
 Tasks.statics.addRepostTryById = function (id) {
   return this.model('Tasks')
-    .update({ _id: id }, { $inc: { repostTry: 1 } })
+    .updateOne({ _id: id }, { $inc: { repostTry: 1 } })
     .exec()
 }
 
 Tasks.statics.updateMediaLocalPathsById = function (id, paths) {
-  return this.model('Tasks').update({ _id: id }, { mediaLocalPaths: paths }).exec()
+  return this.model('Tasks').updateOne({ _id: id }, { mediaLocalPaths: paths }).exec()
 }
 
 Tasks.statics.updateChallengeResById = function (id, challengeRes) {
-  return this.model('Tasks').update({ _id: id }, { challengeRes: challengeRes }).exec()
+  return this.model('Tasks').updateOne({ _id: id }, { challengeRes: challengeRes }).exec()
 }
 
 module.exports = mongoose.model('Tasks', Tasks)

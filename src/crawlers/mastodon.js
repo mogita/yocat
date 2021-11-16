@@ -1,10 +1,11 @@
 const mega = require('megalodon')
 const Tasks = require('./../models/tasks')
+const FSM = require('./../fsm')
 
 module.exports = class Mastodon {
   constructor(baseUrl, accessToken) {
     this.baseUrl = baseUrl
-    this.client = mega.default('mastodon', baseUrl, accessToken)
+    this.client = mega.default('mastodon', `wss://${baseUrl}`, accessToken)
     this.streamer = null
   }
 
@@ -43,8 +44,7 @@ module.exports = class Mastodon {
     }
 
     try {
-      this.enqueue(status)
-      console.log(`[${this.baseUrl}] 📥 enqueued status ${status.url}`)
+      this.runStatus(status)
     } catch (err) {
       console.error(err)
     }
@@ -74,7 +74,9 @@ module.exports = class Mastodon {
     return true
   }
 
-  async enqueue(status) {
+  async runStatus(status) {
+    console.log(`[${this.baseUrl}] 📥 enqueued status ${status.url}`)
+
     const { id } = status
 
     // Extract images
@@ -90,6 +92,21 @@ module.exports = class Mastodon {
 
     try {
       await task.save()
+
+      const fsm = new FSM(task, (repostValidity, err) => {
+        if (err !== null) {
+          console.warn(`[${this.baseUrl}] 🙅 status will not be reposted ${status.url}:`, err)
+          return
+        }
+
+        if (repostValidity.cat === true) {
+          console.log(`[${this.baseUrl}] 😻 status will be reposted by YoCat ${status.url}`)
+        }
+
+        if (repostValidity.dog === true) {
+          console.log(`[${this.baseUrl}] 🐶 status will be reposted by YoDog ${status.url}`)
+        }
+      })
     } catch (err) {
       throw err
     }
