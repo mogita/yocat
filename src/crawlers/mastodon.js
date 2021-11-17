@@ -1,6 +1,8 @@
 const mega = require('megalodon')
+const { fromUrl, parseDomain } = require('parse-domain')
 const Tasks = require('./../models/tasks')
 const FSM = require('./../fsm')
+const config = require('./../../config')
 
 module.exports = class Mastodon {
   constructor(baseUrl, accessToken) {
@@ -17,7 +19,7 @@ module.exports = class Mastodon {
       return
     }
 
-    this.streamer = this.streamClient.localSocket()
+    this.streamer = this.streamClient.publicSocket()
 
     this.streamer.on('connect', (_) => {
       console.log('streamer connected to', this.baseUrl)
@@ -41,7 +43,6 @@ module.exports = class Mastodon {
 
   onStatus(status) {
     if (this.shouldKeepStatus(status) === false) {
-      // console.log(`[${this.baseUrl}] ignored status ${status.url}`)
       return
     }
 
@@ -57,6 +58,13 @@ module.exports = class Mastodon {
   }
 
   shouldKeepStatus(status) {
+    const { hostname } = parseDomain(fromUrl(status.url))
+
+    // Ignore toots from unwanted instances
+    if (config.mastodon.allowedHosts.indexOf(hostname) < 0) {
+      return false
+    }
+
     // Ignore boosted toot
     if (status.reblogged === true) {
       return false

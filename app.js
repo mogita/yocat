@@ -1,7 +1,7 @@
 const fs = require('fs-extra')
 const mongoose = require('mongoose')
 const config = require('./config')
-const crawlers = require('./src/crawlers')
+const Mastodon = require('./src/crawlers/mastodon')
 
 console.log('Yocat system starting...')
 
@@ -34,7 +34,8 @@ mongoose.connection.on('connected', () => {
   dbReady = true
 
   // start crawling
-  crawlers.init(config.sources)
+  const mast = new Mastodon(config.mastodon.domain, config.mastodon.accessToken)
+  mast.startStreamer()
 })
 
 mongoose.connection.on('error', (err) => {
