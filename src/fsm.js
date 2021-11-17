@@ -83,20 +83,11 @@ module.exports = class FSM {
 
       for (const url of this.mediaRemotePaths) {
         const parts = url.split('.')
-        let suffix = parts[parts.length - 1]
-        if (suffix === 'jpeg') {
-          suffix = 'jpg'
-        }
+        const suffix = parts[parts.length - 1]
         const localPath = `${config.files.imageCacheDir}/${this.task.uniqueId}.${suffix}`
 
         try {
-          const res = await axios({
-            method: 'get',
-            url,
-            responseType: 'stream',
-          })
-
-          res.data.pipe(fs.createWriteStream(localPath))
+          await this.downloadFile(url, localPath)
         } catch (err) {
           console.error(`[${this.task.uniqueId}] failed to download image file from ${url}`, err)
           continue
@@ -135,9 +126,10 @@ module.exports = class FSM {
 
       for (const path of this.task.mediaLocalPaths) {
         const encoded = fs.readFileSync(path).toString('base64')
+        console.log('[debug]', path, encoded.length)
         const res = await BAC.challengeImage(encoded)
-        this.challengeRes.push(res)
 
+        this.challengeRes.push(res)
         await this.addLog(
           `tags: ${JSON.stringify(res.labels)}. cat score: ${res.scores.cat}, dog score: ${res.scores.dog}`,
         )
@@ -279,6 +271,23 @@ module.exports = class FSM {
     // basically fsm is simply telling it the task has ended
     // with an optional message
     this.repostFunc({}, err)
+  }
+
+  downloadFile(url, localPath) {
+    return new Promise((resolve, reject) => {
+      const writeStream = fs.createWriteStream(localPath)
+      axios({
+        method: 'get',
+        url,
+        responseType: 'stream',
+      })
+        .then((res) => {
+          res.data.pipe(writeStream)
+          writeStream.on('finish', resolve)
+          writeStream.on('error', reject)
+        })
+        .catch(reject)
+    })
   }
 
   async addLog(log) {
