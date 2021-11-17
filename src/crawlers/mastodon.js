@@ -5,7 +5,9 @@ const FSM = require('./../fsm')
 module.exports = class Mastodon {
   constructor(baseUrl, accessToken) {
     this.baseUrl = baseUrl
-    this.client = mega.default('mastodon', `wss://${baseUrl}`, accessToken)
+    this.accessToken = accessToken
+    this.streamClient = mega.default('mastodon', `wss://${baseUrl}`, accessToken)
+    this.httpClient = mega.default('mastodon', `https://${baseUrl}`, accessToken)
     this.streamer = null
   }
 
@@ -15,7 +17,7 @@ module.exports = class Mastodon {
       return
     }
 
-    this.streamer = this.client.localSocket()
+    this.streamer = this.streamClient.localSocket()
 
     this.streamer.on('connect', (_) => {
       console.log('streamer connected to', this.baseUrl)
@@ -93,19 +95,30 @@ module.exports = class Mastodon {
     try {
       await task.save()
 
-      const fsm = new FSM(task, (repostValidity, err) => {
-        if (err !== null) {
-          console.warn(`[${this.baseUrl}] 🙅 status will not be reposted ${status.url}:`, err)
+      const fsm = new FSM(task, async (repostValidity, msg) => {
+        if (msg !== null) {
+          console.warn(`[${this.baseUrl}] 🙅 status will not be reposted: ${msg}. ${status.url}`)
           return
         }
 
         if (repostValidity.cat === true) {
-          console.log(`[${this.baseUrl}] 😻 status will be reposted by YoCat ${status.url}`)
+          try {
+            await this.httpClient.reblogStatus(id)
+            console.log(`[${this.baseUrl}] 😻 status reposted by YoCat ${status.url}`)
+          } catch (err) {
+            return err
+          }
         }
 
         if (repostValidity.dog === true) {
-          console.log(`[${this.baseUrl}] 🐶 status will be reposted by YoDog ${status.url}`)
+          try {
+            console.log(`[${this.baseUrl}] 🐶 status should be reposted by YoDog ${status.url} (not yet implemented)`)
+          } catch (err) {
+            return err
+          }
         }
+
+        return null
       })
     } catch (err) {
       throw err

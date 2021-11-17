@@ -126,7 +126,6 @@ module.exports = class FSM {
 
       for (const path of this.task.mediaLocalPaths) {
         const encoded = fs.readFileSync(path).toString('base64')
-        console.log('[debug]', path, encoded.length)
         const res = await BAC.challengeImage(encoded)
 
         this.challengeRes.push(res)
@@ -163,7 +162,7 @@ module.exports = class FSM {
   }
 
   onRecognizeSuccessButWillNotRepost() {
-    this.endTask('recognition done, not meeting the criteria')
+    this.endTask('recognition done, criteria not met')
   }
 
   onRecognizeFailure() {
@@ -183,11 +182,13 @@ module.exports = class FSM {
 
       console.log(`[${this.task.uniqueId}] will repost as ${catValid ? 'cat, ' : ''}${dogValid ? 'dog, ' : ''}`)
 
-      // For now one successful repost is counted as succeeded, and both failures
-      // is counted as not succeeded
-      const err = this.repostFunc({ cat: catValid, dog: dogValid }, null)
-      if (err === null) {
-        throw new Error(err)
+      // Either or both fail, it counts as a failure
+      // TODO: This can potentially cause sending duplicated reposts to SNS like Fanfou,
+      // but specifically for Fanfou, it detects repeated posts and rejects them anyway.
+      // Maybe put different reposts into separated queues to handle this more elegantly?
+      const repostErr = await this.repostFunc({ cat: catValid, dog: dogValid }, null)
+      if (repostErr) {
+        throw new Error(repostErr)
       }
 
       await this.addLog(`image reposted as cat: ${catValid}, dog: ${dogValid}`)
