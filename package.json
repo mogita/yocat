@@ -5,7 +5,7 @@
   "author": "mogita <me@mogita.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "node app.js"
+    "start": "node app.js"
   },
   "dependencies": {
     "axios": "^0.24.0",
