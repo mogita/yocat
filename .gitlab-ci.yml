@@ -9,7 +9,7 @@ deploy:
   image: alpine
   stage: deploy
   only:
-    - tag
+    - tags
   cache:
     paths:
       - .cache
