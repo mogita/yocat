@@ -14,11 +14,9 @@ module.exports = {
     apiKey: '',
     secretKey: '',
   },
-  sources: [
-    {
-      type: 'mastodon',
-      domain: 'mastodon.social',
-      accessToken: '',
-    },
-  ],
+  mastodon: {
+    domain: 'mastodon.social',
+    accessToken: '',
+    allowedHosts: ['mastodon.social', 'alive.bar', 'o3o.ca', 'nofan.xyz', 'me.ns.ci'],
+  },
 }

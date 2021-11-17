@@ -1,0 +1,23 @@
+stages:
+  - deploy
+
+before_script:
+  - apk add rsync openssh
+  - cat $CI_CONFIG_JS > ${CI_PROJECT_DIR}/config.js
+
+deploy:
+  image: alpine
+  stage: deploy
+  only:
+    - tag
+  cache:
+    paths:
+      - .cache
+  script:
+    - mkdir -p ~/.ssh
+    - echo "$CI_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    # -I, --ignore-times don't skip files that match size and time
+    - rsync -avI --exclude='.git/' --progress ./ $CI_REMOTE_USERNAME@$CI_REMOTE_HOST:$CI_REMOTE_PATH
+    - ssh $CI_REMOTE_USERNAME@$CI_REMOTE_HOST "CI_MONGO_INITDB_ROOT_USERNAME=$CI_MONGO_INITDB_ROOT_USERNAME CI_MONGO_INITDB_ROOT_PASSWORD=$CI_MONGO_INITDB_ROOT_PASSWORD CI_MONGO_INITDB_DATABASE=$CI_MONGO_INITDB_DATABASE cd $CI_REMOTE_PATH && sudo docker-compose up -d --build"
