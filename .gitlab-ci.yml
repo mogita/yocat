@@ -3,7 +3,7 @@ stages:
 
 before_script:
   - apk add rsync openssh
-  - cat "$CI_CONFIG_JS" > ${CI_PROJECT_DIR}/config.js
+  - echo $CI_CONFIG_JS > ${CI_PROJECT_DIR}/config.js
 
 deploy:
   image: alpine
