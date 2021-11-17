@@ -4,6 +4,8 @@ stages:
 before_script:
   - apk add rsync openssh
   - echo $CI_CONFIG_JS > ${CI_PROJECT_DIR}/config.js
+  - mkdir ${CI_PROJECT_DIR}/scripts
+  - echo $CI_MONGO_SCRIPTS > ${CI_PROJECT_DIR}/scripts/mongodb-create-user-roles.js
 
 deploy:
   image: alpine

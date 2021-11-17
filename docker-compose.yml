@@ -17,6 +17,7 @@ services:
     command: ['--bind_ip_all']
     volumes:
       - ./mongodb_data:/data/db
+      - './scripts:/docker-entrypoint-initdb.d'
     networks:
       - yocat2
     environment:
