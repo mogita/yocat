@@ -21,7 +21,7 @@ BlockedUser.statics.findById = function (id) {
 }
 
 BlockedUser.statics.deleteById = function (id) {
-  return this.model('BlockedUser').remove({ _id: id }).exec()
+  return this.model('BlockedUser').deleteOne({ _id: id }).exec()
 }
 
 BlockedUser.statics.findByUniqueId = function (id) {
@@ -29,12 +29,12 @@ BlockedUser.statics.findByUniqueId = function (id) {
 }
 
 BlockedUser.statics.deleteByUniqueId = function (id) {
-  return this.model('BlockedUser').remove({ uniqueId: id }).exec()
+  return this.model('BlockedUser').deleteOne({ uniqueId: id }).exec()
 }
 
 BlockedUser.statics.upsertUser = function (uniqueId) {
   return this.model('BlockedUser')
-    .update(
+    .updateOne(
       { uniqueId },
       {
         uniqueId,

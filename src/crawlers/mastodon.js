@@ -1,4 +1,5 @@
 const mega = require('megalodon')
+const cheerio = require('cheerio')
 const { fromUrl, parseDomain } = require('parse-domain')
 const Tasks = require('./../models/tasks')
 const BlockedUsers = require('./../models/blocked_users')
@@ -11,35 +12,73 @@ module.exports = class Mastodon {
     this.accessToken = accessToken
     this.streamClient = mega.default('mastodon', `wss://${baseUrl}`, accessToken)
     this.httpClient = mega.default('mastodon', `https://${baseUrl}`, accessToken)
-    this.streamer = null
+    // public timeline streamer
+    this.publicStreamer = null
+    // direct message streamer
+    this.userStreamer = null
   }
 
   startStreamer() {
-    if (this.streamer !== null) {
-      console.log(this.baseUrl, 'streamer already running')
-      return
+    if (this.publicStreamer === null) {
+      this.startPublicStreamer()
     }
 
-    this.streamer = this.streamClient.publicSocket()
+    if (this.userStreamer === null) {
+      this.startUserStreamer()
+    }
+  }
 
-    this.streamer.on('connect', (_) => {
-      console.log('streamer connected to', this.baseUrl)
+  startPublicStreamer() {
+    // start public timeline streamer
+    this.publicStreamer = this.streamClient.publicSocket()
+
+    this.publicStreamer.on('connect', (_) => {
+      console.log('public timeline streamer connected to', this.baseUrl)
     })
 
-    this.streamer.on('update', this.onStatus.bind(this))
+    this.publicStreamer.on('update', this.onStatus.bind(this))
 
-    this.streamer.on('error', this.onError.bind(this))
+    this.publicStreamer.on('error', this.onError.bind(this))
 
-    this.streamer.on('connection-limit-exceeded', (err) => {
-      console.warn(`[${this.baseUrl}] instance has exceeded the connection limit and is going to stop`)
-      this.stopStreamer()
+    this.publicStreamer.on('connection-limit-exceeded', (err) => {
+      console.warn(`[${this.baseUrl}] public timeline streamer has exceeded the connection limit and is going to stop`)
+      this.stopPublicStreamer()
+    })
+  }
+
+  startUserStreamer() {
+    // start direct messages streamer
+    this.userStreamer = this.streamClient.userSocket()
+
+    this.userStreamer.on('connect', (_) => {
+      console.log('user streamer connected to', this.baseUrl)
+    })
+
+    this.userStreamer.on('update', this.onUserUpdate.bind(this))
+
+    this.userStreamer.on('error', this.onError.bind(this))
+
+    this.userStreamer.on('connection-limit-exceeded', (err) => {
+      console.warn(`[${this.baseUrl}] direct message streamer has exceeded the connection limit and is going to stop`)
+      this.stopDirectStreamer()
     })
   }
 
   stopStreamer() {
-    this.streamer.stop()
-    this.streamer.removeAllListeners()
-    this.streamer = null
+    this.stopPublicStreamer()
+    this.stopDirectStreamer()
+  }
+
+  stopPublicStreamer() {
+    this.publicStreamer.stop()
+    this.publicStreamer.removeAllListeners()
+    this.publicStreamer = null
+  }
+
+  stopDirectStreamer() {
+    this.userStreamer.stop()
+    this.userStreamer.removeAllListeners()
+    this.userStreamer = null
   }
 
   async onStatus(status) {
@@ -54,8 +93,50 @@ module.exports = class Mastodon {
     }
   }
 
+  onUserUpdate(status) {
+    const $ = cheerio.load(status.content)
+    const msg = $('p').text()
+    const { account, id } = status
+
+    if (msg.indexOf('@yocat out') > -1) {
+      // user requires to opt out
+      this.handleUserOptOut(account.username, account.acct, id)
+    } else if (msg.indexOf('@yocat in') > -1) {
+      // user requires to opt in
+      this.handleUserOptIn(account.username, account.acct, id)
+    } else {
+      // unknown act
+    }
+  }
+
   onError(err) {
     console.error(`[${this.baseUrl}] ${err}`)
+  }
+
+  async handleUserOptOut(username, acct, statusId) {
+    try {
+      await BlockedUsers.upsertUser(`${this.baseUrl}/@${username}`)
+      const replyMsg = `@${acct} 😸 YoCat will leave your statuses alone and be a cute nice catto from now on.`
+      this.httpClient.postStatus(replyMsg, {
+        in_reply_to_id: statusId,
+        visibility: 'direct',
+      })
+    } catch (err) {
+      console.log(`[${this.baseUrl}] user opt-out operation failed`, err)
+    }
+  }
+
+  async handleUserOptIn(username, acct, statusId) {
+    try {
+      await BlockedUsers.deleteByUniqueId(`${this.baseUrl}/@${username}`)
+      const replyMsg = `@${acct} 😻 YoCat will see your statuses for my catto friends from now on.`
+      this.httpClient.postStatus(replyMsg, {
+        in_reply_to_id: statusId,
+        visibility: 'direct',
+      })
+    } catch (err) {
+      console.log(`[${this.baseUrl}] user opt-in operation failed`, err)
+    }
   }
 
   async shouldKeepStatus(status) {
