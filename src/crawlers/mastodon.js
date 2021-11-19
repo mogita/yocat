@@ -1,6 +1,7 @@
 const mega = require('megalodon')
 const { fromUrl, parseDomain } = require('parse-domain')
 const Tasks = require('./../models/tasks')
+const BlockedUsers = require('./../models/blocked_users')
 const FSM = require('./../fsm')
 const config = require('./../../config')
 
@@ -41,12 +42,12 @@ module.exports = class Mastodon {
     this.streamer = null
   }
 
-  onStatus(status) {
-    if (this.shouldKeepStatus(status) === false) {
-      return
-    }
-
+  async onStatus(status) {
     try {
+      if ((await this.shouldKeepStatus(status)) === false) {
+        return
+      }
+
       this.runStatus(status)
     } catch (err) {
       console.error(err)
@@ -57,7 +58,7 @@ module.exports = class Mastodon {
     console.error(`[${this.baseUrl}] ${err}`)
   }
 
-  shouldKeepStatus(status) {
+  async shouldKeepStatus(status) {
     const { hostname } = parseDomain(fromUrl(status.url))
 
     // Ignore toots from unwanted instances
@@ -78,6 +79,14 @@ module.exports = class Mastodon {
     // Ignore toot without an image
     const images = status.media_attachments.filter((media) => media.type === 'image')
     if (images.length === 0) {
+      return false
+    }
+
+    // Ignore toot of a blocked user
+    const query = `${this.baseUrl}/@${status.account.username}`
+    const blockedUser = await BlockedUsers.findByUniqueId(query)
+    if (blockedUser) {
+      console.log(`[${this.baseUrl}] 🚷 user ${query} has opted out`)
       return false
     }
 
