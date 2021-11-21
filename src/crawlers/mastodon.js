@@ -186,7 +186,7 @@ module.exports = class Mastodon {
     const images = status.media_attachments.filter(
       (media) => ['jpg', 'jpeg', 'png'].indexOf(getUrlExtension(media.remote_url || media.url)) > -1,
     )
-    const remoteImages = images.map((o) => o.remote_url)
+    const remoteImages = images.map((o) => o.remote_url || o.url)
 
     const task = new Tasks({
       uniqueId: `${this.baseUrl}_${id}`,
