@@ -159,7 +159,7 @@ module.exports = class Mastodon {
 
     // Ignore toot without an image
     const images = status.media_attachments.filter(
-      (media) => ['jpg', 'jpeg', 'png'].indexOf(getUrlExtension(media.remote_url)) > -1,
+      (media) => ['jpg', 'jpeg', 'png'].indexOf(getUrlExtension(media.remote_url || media.url)) > -1,
     )
 
     if (images.length === 0) {
@@ -184,7 +184,7 @@ module.exports = class Mastodon {
 
     // Extract images
     const images = status.media_attachments.filter(
-      (media) => ['jpg', 'jpeg', 'png'].indexOf(getUrlExtension(media.remote_url)) > -1,
+      (media) => ['jpg', 'jpeg', 'png'].indexOf(getUrlExtension(media.remote_url || media.url)) > -1,
     )
     const remoteImages = images.map((o) => o.remote_url)
 
