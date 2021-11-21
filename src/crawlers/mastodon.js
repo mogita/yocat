@@ -158,7 +158,10 @@ module.exports = class Mastodon {
     }
 
     // Ignore toot without an image
-    const images = status.media_attachments.filter((media) => media.type === 'image')
+    const images = status.media_attachments.filter(
+      (media) => ['jpg', 'jpeg', 'png'].indexOf(getUrlExtension(media.remote_url)) > -1,
+    )
+
     if (images.length === 0) {
       return false
     }
@@ -180,8 +183,10 @@ module.exports = class Mastodon {
     const { id } = status
 
     // Extract images
-    const images = status.media_attachments.filter((media) => media.type === 'image')
-    const remoteImages = images.map((o) => o.url)
+    const images = status.media_attachments.filter(
+      (media) => ['jpg', 'jpeg', 'png'].indexOf(getUrlExtension(media.remote_url)) > -1,
+    )
+    const remoteImages = images.map((o) => o.remote_url)
 
     const task = new Tasks({
       uniqueId: `${this.baseUrl}_${id}`,
@@ -222,4 +227,8 @@ module.exports = class Mastodon {
       throw err
     }
   }
+}
+
+function getUrlExtension(url) {
+  return url.split(/[#?]/)[0].split('.').pop().trim()
 }
