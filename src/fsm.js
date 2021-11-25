@@ -5,6 +5,7 @@ const states = require('./states')
 const config = require('./../config')
 const BaiduAipClient = require('./baidu')
 const Tasks = require('./models/tasks')
+const screenshot = require('./screenshot')
 
 module.exports = class FSM {
   constructor(task, repostFunc) {
@@ -93,7 +94,20 @@ module.exports = class FSM {
           continue
         }
 
-        localPaths.push(localPath)
+        // take screenshots if the file is a video
+        if (suffix === 'mp4') {
+          try {
+            await screenshot(localPath, `${localPath}-%i.jpg`)
+            for (let i = 1; i < 6; i++) {
+              localPaths.push(`${localPath}-${i}.jpg`)
+            }
+          } catch (err) {
+            console.error(`[${this.task.uniqueId}] failed to take screenshots from video file`, err)
+            continue
+          }
+        } else {
+          localPaths.push(localPath)
+        }
       }
 
       this.task.mediaLocalPaths = localPaths
