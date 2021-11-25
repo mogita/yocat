@@ -99,7 +99,7 @@ module.exports = class FSM {
         if (suffix === 'mp4') {
           try {
             await screenshot(localPath, `${localPath}-%i.jpg`)
-            const files = globAsync(`${localPath}-*`)
+            const files = await globAsync(`${localPath}-*`)
             if (Array.isArray(files)) {
               files.forEach((file) => localPaths.push(file))
             }
