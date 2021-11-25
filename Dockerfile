@@ -1,6 +1,6 @@
 FROM node:16-alpine
 
-RUN apk update && apk add git
+RUN apk update && apk add --no-cache ffmpeg
 
 WORKDIR /app
 
