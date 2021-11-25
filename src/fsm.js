@@ -100,7 +100,9 @@ module.exports = class FSM {
           try {
             await screenshot(localPath, `${localPath}-%i.jpg`)
             const files = globAsync(`${localPath}-*`)
-            localPaths = localPaths.concat(files)
+            if (Array.isArray(files)) {
+              files.forEach((file) => localPaths.push(file))
+            }
           } catch (err) {
             console.error(`[${this.task.uniqueId}] failed to take screenshots from video file`, err)
             continue
