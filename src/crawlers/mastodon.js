@@ -197,6 +197,7 @@ module.exports = class Mastodon {
 
     try {
       await task.save()
+      console.log(`[${this.baseUrl}] task saved to db`)
 
       const fsm = new FSM(task, async (repostValidity, msg) => {
         if (msg !== null) {
@@ -221,6 +222,7 @@ module.exports = class Mastodon {
           }
         }
 
+        console.log(`[${this.baseUrl}] nothing seemed to have happened through FSM`)
         return null
       })
     } catch (err) {
