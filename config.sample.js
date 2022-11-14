@@ -7,7 +7,7 @@ module.exports = {
     pass: '',
   },
   files: {
-    imageCacheDir: '/tmp/yocat_image_cache',
+    imageCacheDir: '/img_cache',
   },
   baiduai: {
     appId: '',

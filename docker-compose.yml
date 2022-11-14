@@ -5,6 +5,8 @@ services:
     container_name: yocat2-server
     build: .
     restart: unless-stopped
+    volumes:
+      - /yocat2/img_cache:/img_cache
     depends_on:
       - mongodb
     networks:

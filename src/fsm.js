@@ -1,4 +1,5 @@
 const StateMachine = require('javascript-state-machine')
+const path = require('path')
 const axios = require('axios')
 const fs = require('fs-extra')
 const states = require('./states')
@@ -86,7 +87,8 @@ module.exports = class FSM {
       for (const url of this.mediaRemotePaths) {
         const parts = url.split('.')
         const suffix = parts[parts.length - 1]
-        const localPath = `${config.files.imageCacheDir}/${this.task.uniqueId}.${suffix}`
+        const filename = `${this.task.uniqueId}.${suffix}`
+        const localPath = `${config.files.imageCacheDir}/${filename}`
 
         try {
           await this.downloadFile(url, localPath)
@@ -140,8 +142,9 @@ module.exports = class FSM {
 
       const yolo = new YoloClient()
 
-      for (const path of this.task.mediaLocalPaths) {
-        const res = await yolo.challengeImage(path)
+      for (const filepath of this.task.mediaLocalPaths) {
+        const basename = path.basename(filepath)
+        const res = await yolo.challengeImage(basename)
 
         this.challengeRes.push(res)
         await this.addLog(
