@@ -3,7 +3,7 @@ const axios = require('axios')
 const fs = require('fs-extra')
 const states = require('./states')
 const config = require('./../config')
-const BaiduAipClient = require('./baidu')
+const YoloClient = require('./yolo')
 const Tasks = require('./models/tasks')
 const screenshot = require('./screenshot')
 const globAsync = require('./glob-async')
@@ -138,11 +138,10 @@ module.exports = class FSM {
         return false
       }
 
-      const BAC = new BaiduAipClient()
+      const yolo = new YoloClient()
 
       for (const path of this.task.mediaLocalPaths) {
-        const encoded = fs.readFileSync(path).toString('base64')
-        const res = await BAC.challengeImage(encoded)
+        const res = await yolo.challengeImage(path)
 
         this.challengeRes.push(res)
         await this.addLog(
