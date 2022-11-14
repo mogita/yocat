@@ -2,11 +2,18 @@ const axios = require('axios')
 
 module.exports = class YoloClient {
   async challengeImage(imageFilePath) {
-    const challengeRes = await axios.get('http://yocat2-yolo-api:8000/api/detect_from_image', {
+    const response = await axios.get('http://yocat2-yolo-api:8000/api/detect_from_image', {
       params: {
         image: imageFilePath,
       },
     })
+
+    if (!response.status || response.status >= 400) {
+      // received error in response
+      return returnVal
+    }
+
+    const challengeRes = response.data
 
     const returnVal = {
       category: null,
@@ -16,11 +23,6 @@ module.exports = class YoloClient {
         dog: 0.0,
       },
       challengeRes,
-    }
-
-    if (challengeRes.error_code && challengeRes.error_code > 0) {
-      // received error in response
-      return returnVal
     }
 
     if (!Array.isArray(challengeRes.detected_labels) || !challengeRes.detected_labels.length) {
