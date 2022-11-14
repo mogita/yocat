@@ -49,11 +49,11 @@ module.exports = class YoloClient {
     returnVal.scores.cat = catScores
     returnVal.scores.dog = dogScores
 
-    if (catScores >= dogScores && catScores >= 0.5) {
+    if (catScores >= dogScores && catScores >= 0.9) {
       returnVal.category = 'cat'
       returnVal.passed = true
       return returnVal
-    } else if (dogScores > catScores && dogScores >= 0.5) {
+    } else if (dogScores > catScores && dogScores >= 0.9) {
       returnVal.category = 'dog'
       returnVal.passed = true
       return returnVal
