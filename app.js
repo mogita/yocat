@@ -2,11 +2,17 @@ const fs = require('fs-extra')
 const mongoose = require('mongoose')
 const config = require('./config')
 const Mastodon = require('./src/crawlers/mastodon')
+const Cleaner = require('./src/cleaner')
 
 console.log('Yocat system starting...')
 
 const { db, files } = config
 fs.ensureDirSync(files.imageCacheDir)
+const cleaner = new Cleaner(files.imageCacheDir)
+// remove old files under the cache directory every hour
+const cleanerInterval = setInterval(() => {
+  cleaner.clean()
+}, 1000 * 60 * 60)
 
 const dsn = `mongodb://${db.user}:${db.pass}@${db.host}:${db.port}/${db.database}`
 let dbReady = false
@@ -47,6 +53,7 @@ mongoose.connection.on('disconnected', () => {
 })
 
 process.on('SIGINT', () => {
+  clearInterval(cleanerInterval)
   mongoose.connection.close(() => {
     console.log('database connection closed')
     process.exit(0)
