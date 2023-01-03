@@ -1,4 +1,4 @@
-const fs = require('fs-extra')
+const fs = require('fs')
 const path = require('path')
 const rimraf = require('rimraf')
 
@@ -13,7 +13,7 @@ module.exports = class Cleaner {
     }
 
     fs.readdir(this.dirPath, function (_err, files) {
-      files.forEach((file, _index) => {
+      files.forEach((file) => {
         const filepath = path.join(this.dirPath, file)
         fs.stat(filepath, (err, stat) => {
           if (err) {
