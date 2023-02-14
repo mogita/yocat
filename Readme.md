@@ -12,7 +12,7 @@ YoCat is live on <a rel="me" href="https://mog.blue/@yocat">@yocat@mog.blue</a>
 
 ![JetBrains Logo](/jetbrains/jb_square.png)
 
-This project is sponsored by [JetBrains Open Source Support](https://jb.gg/OpenSourceSupport.) program.
+This project is sponsored by [JetBrains Open Source Support](https://jb.gg/OpenSourceSupport) program.
 
 # License
 
