@@ -8,6 +8,12 @@ This is a re-written of the original Yocat for Fanfou project and aims to buildi
 
 YoCat is live on <a rel="me" href="https://mog.blue/@yocat">@yocat@mog.blue</a>
 
+# Credit
+
+![JetBrains Logo](/jetbrains/jb_square.png)
+
+This project is sponsored by [JetBrains Open Source Support](https://jb.gg/OpenSourceSupport.) program.
+
 # License
 
 This project is licensed under the terms of the [MIT license](LICENSE).
