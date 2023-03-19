@@ -29,6 +29,6 @@ services:
       MONGO_INITDB_DATABASE: ${CI_MONGO_INITDB_DATABASE}
 
 networks:
-  yocat2-yolo-api_yocat2:
+  yocat-yolo-api_yocat2:
     external: true
   yocat2:
