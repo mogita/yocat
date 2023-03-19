@@ -11,7 +11,7 @@ services:
       - mongodb
     networks:
       - yocat2
-      - yocat2-yolo-api_yocat2
+      - yocat-yolo-api_yocat2
 
   mongodb:
     container_name: yocat2-mongodb
